@@ -5,6 +5,8 @@ import geom
 #######################################################################
 #######################################################################
 
+scale_factor = 1
+
 
 class UKF():
     def __init__(self, x_dim, z_dim, P_dim, x=None, P=None, Q=None, R=None):
@@ -47,7 +49,7 @@ class UKF():
         for r in self.x_residuals:
             self.P_predicted += np.outer(r, r)
 
-        self.P_predicted /= self.num_sigma*2
+        self.P_predicted /= self.num_sigma*scale_factor
 
     def update(self, z, g):
 
@@ -64,14 +66,14 @@ class UKF():
         Pzz = np.zeros(np.shape(self.P))
         for r in z_residuals:
             Pzz += np.outer(r, r)
-        Pzz /= self.num_sigma*2
+        Pzz /= self.num_sigma*scale_factor
 
         Pvv = Pzz + self.R
 
         Pxz = np.zeros([self.P_dim, self.z_dim])
         for i in range(self.num_sigma):
             Pxz += np.outer(self.x_residuals[i], z_residuals[i])
-        Pxz /= self.num_sigma*2
+        Pxz /= self.num_sigma*scale_factor
 
         K = np.dot(Pxz, np.linalg.inv(Pvv))
         I = np.transpose(z - self.z_mean)

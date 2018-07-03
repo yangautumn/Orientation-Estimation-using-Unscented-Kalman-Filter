@@ -2,6 +2,6 @@
 
 from ukf_note import *
 
-for i in range(1, 11):
+for i in range(1, 2):
     print('\nRun on dataset {}'.format(i))
     run_ukf_on_dataset(i)

@@ -40,11 +40,6 @@ def run_ukf_on_dataset(dataset):
     imu_vals = imu_vals[start: end]
     imu_ts = imu_ts[start: end]
 
-    # print('imu_vals shape:\n', np.shape(imu_vals))
-    # print('part of imu_ts array:\n', imu_ts[0:5])
-    # for time in imu_ts[0:10]:
-    #     print(f'{time:f}')
-
     Vref = 3300
 
     # get accelerameter data and change directions of axis
@@ -67,17 +62,14 @@ def run_ukf_on_dataset(dataset):
 
     # get gyro data and rotate the frame
     gyro = imu_vals[:, [4, 5, 3]]
-    # gyro = imu_vals[:, [3, 4, 5]]     # test a wrong rotation
 
-    print('gyro shape:\n', np.shape(gyro), type(gyro))
+    print('gyro shape: ', np.shape(gyro))
 
     gyro_bias = gyro[0]
     gyro_sensitivity = 3.33
     gyro_scale_factor = Vref/1023/gyro_sensitivity
     gyro_val = gyro * gyro_scale_factor
     gyro_val = (gyro_val - gyro_bias * gyro_scale_factor) * (pi/180)
-
-    # print('part of gyro_val array;\n', gyro_val[0:5])
 
     # plt.plot(gyro_val[:, 0], 'r', label='Gyro-x')
     # plt.plot(gyro_val[:, 1], 'g', label='Gyro-x')
@@ -121,6 +113,7 @@ def run_ukf_on_dataset(dataset):
     P = np.identity(3)*1e-5          # Covariance
     Q = np.identity(3)*1e-5          # Process noise
     R = np.identity(3)*5e-3          # Measurement noise
+
     # The initial orientation as a quaternion
     q0 = np.array([1, 0, 0, 0])
     ut = gyro_val[0]
@@ -147,18 +140,10 @@ def run_ukf_on_dataset(dataset):
         else:
             ukf.predict(u=gyro_val[i], dt=imu_ts[i]-imu_ts[i-1])
 
-        # print('predicted state\n', ukf.x_predicted)
-        # print('predicted covariance\n', ukf.P_predicted)
-
         ukf.update(acc_val[i], g)
-
-        # print('updated state\n', ukf.x)
-        # print('updated covariance\n', ukf.P)
 
         predicted_q = np.vstack((predicted_q, ukf.x))
         R_calc[:, :, i] = geom.quaternion_to_matrix(ukf.x)
-
-    # predicted_q = np.matrix(predicted_q)
 
     #
     roll = np.zeros(np.shape(predicted_q)[0])
@@ -182,7 +167,7 @@ def run_ukf_on_dataset(dataset):
         #     print(f'{time:f}')
 
         vicon_vals = vicon_vals[:, :, start: end]
-        print('vicon_vals shape:\n', np.shape(vicon_vals))
+        print('vicon_vals shape: ', np.shape(vicon_vals))
 
         num = np.shape(vicon_vals)[2]
         vicon_roll = np.zeros(num)
@@ -193,17 +178,22 @@ def run_ukf_on_dataset(dataset):
             vicon_yaw[i], vicon_pitch[i], vicon_roll[i] = geom.matrix_to_ypr(R)
 
         plt.figure()
+
         plt.subplot(311)
-        plt.plot(vicon_roll, 'b', label='Ground truth')
-        plt.plot(roll, 'r', label='UKF estimated')
-        plt.ylabel('Roll')
+        plt.plot(vicon_yaw, 'b', label='Ground truth')
+        plt.plot(yaw, 'r', label='UKF estimated')
+        plt.ylabel('Yaw')
+
         plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
                    ncol=2, mode="expand", borderaxespad=0.)
+
         plt.subplot(312)
         plt.plot(vicon_pitch, 'b', pitch, 'r')
         plt.ylabel('Pitch')
+
         plt.subplot(313)
-        plt.plot(vicon_yaw, 'b', yaw, 'r')
-        plt.ylabel('Yaw')
+        plt.plot(vicon_roll, 'b', roll, 'r')
+        plt.ylabel('Roll')
+
         # plt.savefig('Results/RPY'+str(Dataset)+'.png')
         plt.show()
