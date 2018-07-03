@@ -1,6 +1,6 @@
 import numpy as np
 
-import geom
+import quat_helper
 
 #######################################################################
 #######################################################################
@@ -21,7 +21,7 @@ class UKF():
         self.num_sigma = 2*P_dim
 
     def predict(self, u, dt):
-        qu = geom.expq((u*dt)/2)
+        qu = quat_helper.expq((u*dt)/2)
 
         L = np.linalg.cholesky(self.P+self.Q)
         new_vec = np.hstack(
@@ -29,7 +29,8 @@ class UKF():
         new_vec = np.transpose(new_vec)
 
         # Sigma points obtained by disturbing the current state (quaternions)
-        self.sigma_points = geom.qmult(geom.expq(new_vec/2), self.x)
+        self.sigma_points = quat_helper.qmult(
+            quat_helper.expq(new_vec/2), self.x)
 
         # Unscented transform
         # get transformed sigma points - motion_sig,
@@ -37,13 +38,14 @@ class UKF():
         # then evaluate the errors of transformed points from the mean - self.x_residuals
 
         # TODO The order of quaternion multiplication/composition matters
-        self.sigma_f = geom.qmult(self.sigma_points, qu)
-        # self.sigma_f = geom.qmult(qu, sigma_points)
+        self.sigma_f = quat_helper.qmult(self.sigma_points, qu)
+        # self.sigma_f = quat_helper.qmult(qu, sigma_points)
 
-        self.x_predicted = geom.quaternion_mean(self.sigma_f)
+        self.x_predicted = quat_helper.quaternion_mean(self.sigma_f)
 
         self.x_residuals = 2 * \
-            geom.logq(geom.qmult(self.sigma_f, geom.qinv(self.x_predicted)))
+            quat_helper.logq(quat_helper.qmult(
+                self.sigma_f, quat_helper.qinv(self.x_predicted)))
 
         self.P_predicted = np.zeros(np.shape(self.P))
         for r in self.x_residuals:
@@ -54,8 +56,8 @@ class UKF():
     def update(self, z, g):
 
         # use accelerometer data to update/correct the prediction
-        h = geom.qmult(geom.qmult(
-            geom.qinv(self.sigma_f), g), self.sigma_f)
+        h = quat_helper.qmult(quat_helper.qmult(
+            quat_helper.qinv(self.sigma_f), g), self.sigma_f)
 
         self.sigma_h = h[:, 1:]
 
@@ -77,9 +79,9 @@ class UKF():
 
         K = np.dot(Pxz, np.linalg.inv(Pvv))
         I = np.transpose(z - self.z_mean)
-        KI = geom.expq(np.dot(K, I)/2)
+        KI = quat_helper.expq(np.dot(K, I)/2)
 
-        self.x = geom.qmult(KI, self.x_predicted)
+        self.x = quat_helper.qmult(KI, self.x_predicted)
 
         TT = np.dot(np.dot(K, Pvv), np.transpose(K))
 

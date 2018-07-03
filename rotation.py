@@ -1,9 +1,5 @@
 """Collection of utilities for dealing with the mathematics of spatial
-rotations.
-
-Author: Andrew Adare
-"""
-
+rotations."""
 
 import numpy as np
 from math import sin, cos, pi

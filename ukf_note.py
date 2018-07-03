@@ -19,7 +19,7 @@ import pickle
 import matplotlib.pyplot as plt
 import cv2
 
-from quat_helper import *
+import quat_helper
 from ukf_helper import *
 
 ########################################################################
@@ -143,7 +143,7 @@ def run_ukf_on_dataset(dataset):
         ukf.update(acc_val[i], g)
 
         predicted_q = np.vstack((predicted_q, ukf.x))
-        R_calc[:, :, i] = geom.quaternion_to_matrix(ukf.x)
+        R_calc[:, :, i] = quat_helper.quaternion_to_matrix(ukf.x)
 
     #
     roll = np.zeros(np.shape(predicted_q)[0])
@@ -151,7 +151,8 @@ def run_ukf_on_dataset(dataset):
     yaw = np.zeros(np.shape(predicted_q)[0])
 
     for i in range(np.shape(predicted_q)[0]):
-        yaw[i], pitch[i], roll[i] = geom.quaternion_to_ypr(predicted_q[i])
+        yaw[i], pitch[i], roll[i] = quat_helper.quaternion_to_ypr(
+            predicted_q[i])
 
     # Compare with ground-truth data
     if os.path.exists("vicon/viconRot"+str(Dataset)+".mat"):
@@ -175,7 +176,8 @@ def run_ukf_on_dataset(dataset):
         vicon_yaw = np.zeros(num)
         for i in range(num):
             R = vicon_vals[:, :, i]
-            vicon_yaw[i], vicon_pitch[i], vicon_roll[i] = geom.matrix_to_ypr(R)
+            vicon_yaw[i], vicon_pitch[i], vicon_roll[i] = quat_helper.matrix_to_ypr(
+                R)
 
         plt.figure()
 
