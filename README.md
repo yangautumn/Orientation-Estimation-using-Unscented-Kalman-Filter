@@ -1,5 +1,33 @@
 Orientation Estimation using Unscented Kalman Filter
 ====================================================
+In my implementation, I take the logistic from the original project. However, I focused on only orientation tracking to get a sense of how unscented kalman filter works, which helps me to implement a UKF for trakcing 3D position, velocity, and orientation by fusing IMU and GPS data.
+
+
+Differences from orignal project
+--------------------------------
+* Tested on Mac with Python 3.6.5
+* Used a library called `quat_helper.py` for quaternion operations
+* Employed the framework of the `filterpy.kalman UKF`
+* Used an easy way to get the mean of a set of quaternions, see `quaternion_mean` in `quat_helper.py`
+
+**One thing to note** is that there are two conventions on quaternion product/multiplication/composition: Hamilton and JPL (see ['Why and How to Avoid the Flipped Quaternion Multiplication'](https://arxiv.org/abs/1801.07478)). In my implementation, I used Hamiton convention, which is commonly used (`qb = qmult(dq, qa)`).
+
+
+
+
+
+
+======================= Below is the original readme file ========================
+==================================================================================
+
+
+
+
+
+
+
+Orientation Estimation using Unscented Kalman Filter
+====================================================
 
 In this project, I have implemented Unscented Kalman filter to track three dimensional orientation. This means to estimate the underlying 3D orientation by learning the appropriate model parameters from ground truth data given by a Vicon motion capture system, given IMU sensor readings from gyroscopes and accelerometers. Then be able to generate a real-time panoramic image from camera images using the 3D orientation filter.
 
